@@ -163,7 +163,7 @@ async function parsePullRequest(eventName, event, token) {
 async function getContext() {
 	const { actor, eventName, eventPath, token, workspace } = parseActionEnv();
 	const event = parseEnvFile(eventPath);
-	const pullRequest = await parsePullRequest(eventName, eventPath);
+	const pullRequest = await parsePullRequest(eventName, event, token);
 	core.info(`found pull request associated ${JSON.stringify(pullRequest)}`);
 	console.log("found pull request", pullRequest);
 	return {
