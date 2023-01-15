@@ -30,7 +30,7 @@ jobs:
         run: |
           PR_URL="${{ github.event.issue.pull_request.url }}"
           PR_NUM=${PR_URL##*/}
-          echo "Checking out from PR #$PR_NUM based on URL: $PR_URL EVENT: toJSON(${{ github.event }})"
+          echo "Checking out from PR #$PR_NUM based on URL: $PR_URL EVENT: ${{ toJSON(github.event) }}"
           hub pr checkout $PR_NUM
 
       - name: Set up Node.js
