@@ -70,25 +70,18 @@ function parseEnvFile(eventPath) {
  * Parses the name of the current branch from the GitHub webhook event
  * @param {string} eventName - GitHub event type
  * @param {object} event - GitHub webhook event payload
- * @param {string} token - GitHub token
- * @returns {Promise<string>} - Branch name
+ * @param {object | undefined} pullRequest - pull request payload associated to event
+ * @returns {string} - Branch name
  */
-async function parseBranch(eventName, event, token) {
+function parseBranch(eventName, event, pullRequest) {
 	if (eventName === "push" || eventName === "workflow_dispatch") {
 		return event.ref.substring(11); // Remove "refs/heads/" from start of string
 	}
 	if (eventName === "pull_request" || eventName === "pull_request_target") {
-		return event.pull_request.head.ref;
+		return pullRequest.head.ref;
 	}
 	if (eventName === "issue_comment") {
-		core.info("in parseBranch for issue_comment event payload", event);
 		if (event.issue.pull_request) {
-			const octokit = getOctokit(token);
-			const { data: pullRequest } = await octokit.rest.pulls.get({
-				owner: context.repo.owner,
-				repo: context.repo.repo,
-				pull_number: context.issue.number,
-			});
 			return pullRequest.head.ref;
 		}
 		throw Error(
@@ -103,9 +96,10 @@ async function parseBranch(eventName, event, token) {
  * Fork detection is only supported for the "pull_request" event
  * @param {string} eventName - GitHub event type
  * @param {object} event - GitHub webhook event payload
+ * @param {object | undefined} pullRequest - pull request payload associated to event
  * @returns {GithubRepository} - Information about the GitHub repository and its fork (if it exists)
  */
-function parseRepository(eventName, event) {
+function parseRepository(eventName, event, pullRequest) {
 	const repoName = event.repository.full_name;
 	const cloneUrl = event.repository.clone_url;
 	let forkName;
@@ -119,9 +113,9 @@ function parseRepository(eventName, event) {
 		// "pull_request" events are triggered on the repository where the PR is made. The PR branch can
 		// be on the same repository (`forkRepository` is set to `null`) or on a fork (`forkRepository`
 		// is defined)
-		const headRepoName = event.pull_request.head.repo.full_name;
+		const headRepoName = pullRequest.head.repo.full_name;
 		forkName = repoName === headRepoName ? undefined : headRepoName;
-		const headForkCloneUrl = event.pull_request.head.repo.clone_url;
+		const headForkCloneUrl = pullRequest.head.repo.clone_url;
 		forkCloneUrl = cloneUrl === headForkCloneUrl ? undefined : headForkCloneUrl;
 	}
 	return {
@@ -134,6 +128,30 @@ function parseRepository(eventName, event) {
 }
 
 /**
+ * Parses the name of the current branch from the GitHub webhook event
+ * @param {string} eventName - GitHub event type
+ * @param {object} event - GitHub webhook event payload
+ * @param {string} token - GitHub token
+ * @returns {Promise<object | undefined>} - The payload corresponding to the pull request
+ */
+async function parsePullRequest(eventName, event, token) {
+	if (eventName === "pull_request" || eventName === "pull_request_target") {
+		return event.pull_request;
+	}
+	if (eventName === "issue_comment" && event.issue.pull_request) {
+		core.info(`in parsePullRequest for issue_comment event payload ${JSON.stringify(event)}`);
+		const octokit = getOctokit(token);
+		const { data: pullRequest } = await octokit.rest.pulls.get({
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+			pull_number: context.issue.number,
+		});
+		return pullRequest.head.ref;
+	}
+	return undefined;
+}
+
+/**
  * Returns information about the GitHub repository and action trigger event
  * @returns {Promise<GithubContext>} context - Information about the GitHub repository
  * and action trigger event
@@ -141,12 +159,16 @@ function parseRepository(eventName, event) {
 async function getContext() {
 	const { actor, eventName, eventPath, token, workspace } = parseActionEnv();
 	const event = parseEnvFile(eventPath);
+	const pullRequest = await parsePullRequest(eventName, eventPath);
+	if (pullRequest) {
+		core.info(`found pull request associated ${JSON.stringify(pullRequest)}`);
+	}
 	return {
 		actor,
-		branch: await parseBranch(eventName, event, token),
+		branch: await parseBranch(eventName, event, pullRequest),
 		event,
 		eventName,
-		repository: parseRepository(eventName, event),
+		repository: parseRepository(eventName, event, pullRequest),
 		token,
 		workspace,
 	};
