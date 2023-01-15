@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const { existsSync } = require("fs");
 const { join } = require("path");
 
@@ -15,7 +14,6 @@ const { getSummary } = require("./utils/lint-result");
  */
 async function runAction() {
 	const context = await getContext();
-	console.log("got context", context);
 	core.info(`got context ${JSON.stringify(context)}`);
 	const autoFix = core.getInput("auto_fix") === "true";
 	const commit = core.getInput("commit") === "true";
@@ -32,7 +30,11 @@ async function runAction() {
 		(context.eventName === "issue_comment" && context.event.issue.pull_request);
 
 	// If on a PR from fork: Display messages regarding action limitations
-	if (context.eventName === "pull_request" && context.repository.hasFork) {
+	if (
+		(context.eventName === "pull_request" ||
+			(context.eventName === "issue_comment" && context.event.issue.pull_request)) &&
+		context.repository.hasFork
+	) {
 		core.error(
 			"This action does not have permission to create annotations on forks. You may want to run it only on `pull_request_target` events with checks permissions set to write. See https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#permissions for details.",
 		);

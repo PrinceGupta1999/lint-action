@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const { readFileSync } = require("fs");
 
 const core = require("@actions/core");
@@ -136,8 +135,6 @@ function parseRepository(eventName, event, pullRequest) {
  * @returns {Promise<object | undefined>} - The payload corresponding to the pull request
  */
 async function parsePullRequest(eventName, event, token) {
-	core.info(`in parsePullRequest for event ${event} payload ${JSON.stringify(event)}`);
-	console.log(`in parsePullRequest for event ${event} payload ${JSON.stringify(event)}`);
 	if (eventName === "pull_request" || eventName === "pull_request_target") {
 		return event.pull_request;
 	}
@@ -148,8 +145,6 @@ async function parsePullRequest(eventName, event, token) {
 			repo: context.repo.repo,
 			pull_number: context.issue.number,
 		});
-		console.log(`in parsePullRequest got pull request payload ${JSON.stringify(event)}`);
-		core.info(`in parsePullRequest got pull request payload ${JSON.stringify(event)}`);
 		return pullRequest;
 	}
 	return undefined;
@@ -165,7 +160,6 @@ async function getContext() {
 	const event = parseEnvFile(eventPath);
 	const pullRequest = await parsePullRequest(eventName, event, token);
 	core.info(`found pull request associated ${JSON.stringify(pullRequest)}`);
-	console.log("found pull request", pullRequest);
 	return {
 		actor,
 		branch: await parseBranch(eventName, event, pullRequest),
