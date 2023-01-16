@@ -121,7 +121,10 @@ async function fetchPullRequest(repository, pullRequestNumber, token) {
 				},
 			},
 		);
-		core.info(`received response ${JSON.stringify(response)}`);
+		core.info(
+			`fetchPullRequest completed successfully for owner:${repository} pull:${pullRequestNumber}`,
+		);
+		// core.info(`received response ${JSON.stringify(response)}`);
 		return response.data;
 	} catch (err) {
 		let errorMessage = err.message;
@@ -139,7 +142,9 @@ async function fetchPullRequest(repository, pullRequestNumber, token) {
 			}
 		}
 		core.error(errorMessage);
-		throw new Error(`Error while trying to fetch PR ${repository}/${pullRequestNumber}`);
+		throw new Error(
+			`Error while trying to fetch PR for owner:${repository} pull:${pullRequestNumber}`,
+		);
 	}
 }
 

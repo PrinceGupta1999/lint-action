@@ -1,5 +1,7 @@
 const https = require("https");
 
+const core = require("@actions/core");
+
 /**
  * Helper function for making HTTP requests
  * @param {string | URL} url - Request URL
@@ -21,6 +23,7 @@ function request(url, options) {
 						err.data = data;
 						reject(err);
 					} else {
+						core.info(`in request for url: ${url} completed successfully`);
 						resolve({ res, data: JSON.parse(data) });
 					}
 				});
