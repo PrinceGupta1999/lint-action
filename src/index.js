@@ -14,7 +14,6 @@ const { getSummary } = require("./utils/lint-result");
  */
 async function runAction() {
 	const context = await getContext();
-	core.info(`got context ${JSON.stringify(context)}`);
 	const autoFix = core.getInput("auto_fix") === "true";
 	const commit = core.getInput("commit") === "true";
 	const skipVerification = core.getInput("git_no_verify") === "true";

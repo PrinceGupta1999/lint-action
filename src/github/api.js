@@ -124,7 +124,6 @@ async function fetchPullRequest(repository, pullRequestNumber, token) {
 		core.info(
 			`fetchPullRequest completed successfully for owner:${repository} pull:${pullRequestNumber}`,
 		);
-		// core.info(`received response ${JSON.stringify(response)}`);
 		return response.data;
 	} catch (err) {
 		let errorMessage = err.message;
