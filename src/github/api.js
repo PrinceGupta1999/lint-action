@@ -110,7 +110,7 @@ async function fetchPullRequest(repository, pullRequestNumber, token) {
 	try {
 		core.info(`fetchPullRequest for owner ${repository}`);
 		const response = await request(
-			`${process.env.GITHUB_API_URL}/repos/${repository}/${pullRequestNumber}`,
+			`${process.env.GITHUB_API_URL}/repos/${repository}/pulls/${pullRequestNumber}`,
 			{
 				method: "GET",
 				headers: {
