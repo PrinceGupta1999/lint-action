@@ -1,10 +1,10 @@
 const { readFileSync } = require("fs");
 
 const core = require("@actions/core");
-const { getOctokit, context } = require("@actions/github");
 
 const { name: actionName } = require("../../package.json");
 const { getEnv } = require("../utils/action");
+const { fetchPullRequest } = require("./api");
 
 /**
  * GitHub Actions workflow's environment variables
@@ -139,13 +139,7 @@ async function parsePullRequest(eventName, event, token) {
 		return event.pull_request;
 	}
 	if (eventName === "issue_comment" && event.issue.pull_request) {
-		const octokit = getOctokit(token);
-		const { data: pullRequest } = await octokit.rest.pulls.get({
-			owner: context.repo.owner,
-			repo: context.repo.repo,
-			pull_number: context.issue.number,
-		});
-		return pullRequest;
+		return fetchPullRequest(event.repository.full_name, event.issue.number, token);
 	}
 	return undefined;
 }
